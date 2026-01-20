@@ -1,0 +1,60 @@
+# vibe_coding_bar_chart.py
+import pandas as pd
+import matplotlib.pyplot as plt
+from matplotlib.patches import FancyBboxPatch
+
+# 1. 把原始数据扔进 DataFrame ——  vibe：先整上再说
+df = pd.DataFrame({
+    "hour": [0, 2, 4, 6, 8, 10, 12],
+    "temp": [18.2, 17.8, 17.5, 18.1, 20.5, 23.8, 26.4],
+    "rh":   [65, 68, 70, 65, 60, 55, 48],
+    "pm25": [35, 38, 42, 45, 50, 55, 58]
+})
+
+# 2. 选一个“情绪”配色 —— vibe：今天心情偏暖色
+palette = ["#FF6B6B", "#4ECDC4", "#FFE66D"]
+
+# 3. 画布尺寸 16:9，留足呼吸感
+fig, ax = plt.subplots(figsize=(10, 6))
+ax.set_facecolor("#FFFDF8")
+
+# 4. 画三组柱，自带渐变遮罩效果（伪·gradient）
+bar_width = 0.25
+x = df["hour"]
+for idx, col, color in zip(range(3), ["temp", "rh", "pm25"], palette):
+    bars = ax.bar(x + idx*bar_width, df[col], width=bar_width, color=color, edgecolor="white", linewidth=1.2)
+    # 给每个柱加圆角+阴影，氛围感拉满
+    for bar in bars:
+        xx, yy, w, h = bar.get_x(), bar.get_height(), bar.get_width(), bar.get_height()
+        if h > 0:  # 只给非零柱加特效
+            p = FancyBboxPatch((xx, 0), w, h,
+                               boxstyle="round,pad=0.004",
+                               ec="none", fc=color, alpha=0.8,
+                               transform=ax.transData)
+            ax.add_patch(p)
+            # 底部阴影
+            shadow = FancyBboxPatch((xx+0.02, -0.3), w-0.04, 0.3,
+                                    boxstyle="round,pad=0.004",
+                                    ec="none", fc="black", alpha=0.06)
+            ax.add_patch(shadow)
+
+# 5. 细节润色 ——  vibe：less is more
+ax.set_xticks(x + bar_width)
+ax.set_xticklabels([f"{h}:00" for h in df["hour"]])
+ax.set_xlabel("Time", fontsize=12, color="#555")
+ax.set_ylabel("Value", fontsize=12, color="#555")
+ax.set_title("Vibe Coding 氛围感柱状图 | 温度·湿度·PM2.5", fontsize=14, color="#333", pad=20)
+ax.spines[:].set_visible(False)
+ax.yaxis.grid(True, ls="--", lw=0.5, color="gray", alpha=0.3)
+ax.set_axisbelow(True)
+
+# 6. 图例用半透明毛玻璃风格
+leg = ax.legend(["Temp (℃)", "RH (%)", "PM2.5 (μg/m³)"],
+                loc="upper left", frameon=True, fontsize=10)
+leg.get_frame().set_facecolor("#FFFFFFDD")
+leg.get_frame().set_edgecolor("none")
+
+# 7. 输出高清图，朋友圈直发
+plt.tight_layout()
+plt.savefig("vibe_chart.png", dpi=300)
+plt.show()
